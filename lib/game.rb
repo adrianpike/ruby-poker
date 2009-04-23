@@ -25,6 +25,10 @@ class Player
 		end
 	end
 	
+	def win(amount)
+		@cash += amount
+	end
+	
 	def fold!; @folded=true;	end
 	def folded?; @folded; end
 	
@@ -59,23 +63,24 @@ class Game
 	def bet(p,amount)
 		if is_players_turn?(p) then
 			if amount>=bet_to_player(p) then
-				p "#{p} bets #{amount}."
+				p "#{p} bets $#{amount}."
 				
 				if @players[p].do_bet(amount) then
-					@pot+=amount
 					
-					if (amount > bet_to_player(p)) then
-						p "#{p} raised #{amount-@play_size}."
+					if (bet_to_player(p)<0) then
+						p "#{p} raised $#{-bet_to_player(p)}."
 					end
-					
-					@play_size += amount - bet_to_player(p)
+						
+					@pot+=amount
+							
+					@play_size = @players[p].bet
 
 					advance_bet_position
 				else
-					p "#{p}: You can't bet that much."
+					p "#{p}: You can't bet that much. You've only got #{@players[p].cash}"
 				end
 			else
-				p "#{p}: You must bet at least #{@play_size}."
+				p "#{p}: You must bet at least $#{@play_size}."
 			end
 		else
 			p "#{p}: it's not your turn."
@@ -100,7 +105,7 @@ class Game
 			begin
 				player = @players[@players.keys[@bet_position]]
 				if (not player.folded?) and (bet_to_player(@players.keys[@bet_position]))>0 then
-					p "Play is #{bet_to_player(@players.keys[@bet_position])} to #{@players.keys[@bet_position]}"
+					p "Play is $#{bet_to_player(@players.keys[@bet_position])} to #{@players.keys[@bet_position]}"
 					return
 				end
 		
@@ -129,6 +134,7 @@ class Game
 			p.new_round!
 			}
 		advance_bet_position
+		announce_game_updates
 	end
 	
 	def end_round
@@ -142,7 +148,7 @@ class Game
 				}
 		
 			@bet_position=0
-			p "It is now round #{@round} - #{@rounds[@round]}."
+			p "It is now round #{@round} - #{@rounds[@round]}. The pot is $#{@pot}."
 			start_round
 		end
 	end
@@ -156,7 +162,8 @@ class Game
 			}
 			
 		winner = hands.sort{|a,b| b[1]<=>a[1] }.first
-		p winner.first+" wins with a #{winner.last.hand_rating}!"
+		p winner.first+" wins $#{@pot} with a #{winner.last.hand_rating}!"
+		@players[winner.first].win(@pot)
 	end
 
 	def new_player(p,cash=1000);	@players[p] = Player.new(p,cash); end
@@ -189,5 +196,8 @@ class TexasHoldEm < Game
 	def final_hand(p)
 		@players[p].hand + river
 	end
-		
+
+	def announce_game_updates
+		p "River is now #{river}" if river
+	end	
 end
