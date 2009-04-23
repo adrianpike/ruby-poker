@@ -10,24 +10,26 @@ rescue LoadError
   nil
 end
 
-RUBYPOKER_VERSION = "0.3.1"
+RUBYPOKER_VERSION = "0.0.1"
 
 spec = Gem::Specification.new do |s|
-  s.name     = "ruby-poker"
+  s.name     = "adrianpike-ruby-poker"
   s.version  = RUBYPOKER_VERSION
-  s.date     = "2009-01-24"
+  s.date     = "2009-04-23"
   s.rubyforge_project = "rubypoker"
   s.platform = Gem::Platform::RUBY
   s.summary = "Poker library in Ruby"
-  s.description = "Ruby library for comparing poker hands and determining the winner."
-  s.author  = "Rob Olson"
-  s.email    = "rko618@gmail.com"
-  s.homepage = "http://github.com/robolson/ruby-poker"
+  s.description = "Ruby library for running poker games."
+  s.author  = "Adrian Pike [hat tip: Rob Olson]"
+  s.email    = "adrian.pike@gmail.com"
+  s.homepage = "http://github.com/adrianpike/ruby-poker"
   s.has_rdoc = true
   s.files    = ["CHANGELOG", 
-		"examples/deck.rb", 
+		"examples/game_example.rb", 
 		"examples/quick_example.rb", 
 		"lib/card.rb", 
+		"lib/deck.rb",
+		"lib/game.rb",
 		"lib/ruby-poker.rb", 
 		"LICENSE", 
 		"Rakefile", 
