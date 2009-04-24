@@ -1,4 +1,6 @@
 require 'card.rb'
+require 'game.rb'
+require 'deck.rb'
 
 class PokerHand
   include Comparable

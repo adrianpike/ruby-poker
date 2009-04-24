@@ -1,7 +1,3 @@
-require 'card.rb'
-require 'deck.rb'
-require 'ruby-poker.rb'
-
 DEBUG=true
 ANTE=5
 
@@ -44,6 +40,7 @@ class Game
 		@deck = Deck.new
 		@players = Hash.new
 		@pot=0
+		@started=false
 		@play_size=ante_size
 		@round=0
 		@bet_position=0
@@ -52,23 +49,23 @@ class Game
 	
 	def fold(p)
 		if is_players_turn?(p) then
-			p "#{p} folded."
+			output "#{p} folded."
 			@players[p].fold!
 			advance_bet_position
 		else
-			p "#{p}: it's not your turn."	
+			output "#{p}: it's not your turn."	
 		end
 	end
 	
 	def bet(p,amount)
 		if is_players_turn?(p) then
 			if amount>=bet_to_player(p) then
-				p "#{p} bets $#{amount}."
+				output "#{p} bets $#{amount}."
 				
 				if @players[p].do_bet(amount) then
 					
 					if (bet_to_player(p)<0) then
-						p "#{p} raised $#{-bet_to_player(p)}."
+						output "#{p} raised $#{-bet_to_player(p)}."
 					end
 						
 					@pot+=amount
@@ -77,15 +74,52 @@ class Game
 
 					advance_bet_position
 				else
-					p "#{p}: You can't bet that much. You've only got #{@players[p].cash}"
+					output "#{p}: You can't bet that much. You've only got #{@players[p].cash}"
 				end
 			else
-				p "#{p}: You must bet at least $#{@play_size}."
+				output "#{p}: You must bet at least $#{@play_size}."
 			end
 		else
-			p "#{p}: it's not your turn."
+			output "#{p}: it's not your turn."
 		end
 	end
+
+	def new_player(p,cash=1000);
+		unless @started
+			if @players[p] then
+				output "#{p}: You're already in a game!"
+			else
+				@players[p] = Player.new(p,cash); 
+			end
+		else
+			output "We've already started!"
+		end
+	end
+
+	# Helpers for I/O
+	def hand(p); @players[p].hand; end
+	
+	def start
+		unless @started
+			deal
+			start_round
+			@started=true
+		else
+			output "We've already started!"
+		end
+	end
+
+
+	# Stubs for various games
+	def deal;end
+	def final_hand(p); @players[p].hand; end
+	
+	# Hooks for external awesomeness
+	def output(o);printf o;end
+	def hook_end_hand;end
+	def started?;@started;end
+	
+	private
 	
 	def is_players_turn?(p)
 		p==@players.keys[@bet_position]
@@ -105,7 +139,7 @@ class Game
 			begin
 				player = @players[@players.keys[@bet_position]]
 				if (not player.folded?) and (bet_to_player(@players.keys[@bet_position]))>0 then
-					p "Play is $#{bet_to_player(@players.keys[@bet_position])} to #{@players.keys[@bet_position]}"
+					output "Play is $#{bet_to_player(@players.keys[@bet_position])} to #{@players.keys[@bet_position]}"
 					return
 				end
 		
@@ -116,7 +150,7 @@ class Game
 			end_round
 		else
 			@bet_position=first_unfolded_player
-			p "#{@players.keys[@bet_position]} opens."
+			output "#{@players.keys[@bet_position]} opens."
 		end
 	end
 
@@ -148,7 +182,7 @@ class Game
 				}
 		
 			@bet_position=0
-			p "It is now round #{@round} - #{@rounds[@round]}. The pot is $#{@pot}."
+			output "It is now round #{@round} - #{@rounds[@round]}. The pot is $#{@pot}."
 			start_round
 		end
 	end
@@ -162,19 +196,10 @@ class Game
 			}
 			
 		winner = hands.sort{|a,b| b[1]<=>a[1] }.first
-		p winner.first+" wins $#{@pot} with a #{winner.last.hand_rating}!"
+		output winner.first+" wins $#{@pot} with a #{winner.last.hand_rating}!"
 		@players[winner.first].win(@pot)
+		hook_end_hand
 	end
-
-	def new_player(p,cash=1000);	@players[p] = Player.new(p,cash); end
-
-	# Helpers for I/O
-	def hand(p); @players[p].hand; end
-	
-	# Stubs for various games
-	def start;deal;start_round;end
-	def deal;end
-	def final_hand(p); @players[p].hand; end
 end
 
 class TexasHoldEm < Game
@@ -198,6 +223,6 @@ class TexasHoldEm < Game
 	end
 
 	def announce_game_updates
-		p "River is now #{river}" if river
+		output "River is now #{river}" if river
 	end	
 end
